@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Activity, Thermometer, Droplets, Wind, Bell, TrendingUp } from "lucide-react";
 import { auth, database } from "@/lib/firebase";
-import { ref, onValue, off } from "firebase/database";
+import { ref, onValue, off, update } from "firebase/database";
 import { onAuthStateChanged } from "firebase/auth";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
 interface HealthData {
   buzzer: boolean;
@@ -30,6 +32,7 @@ export default function Dashboard() {
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [historicalData, setHistoricalData] = useState<any[]>([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -90,6 +93,23 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  const handleFanToggle = async (checked: boolean) => {
+    try {
+      const healthRef = ref(database, 'health_monitor');
+      await update(healthRef, { fan: checked });
+      toast({
+        title: checked ? "Fan turned on" : "Fan turned off",
+        description: "Fan status updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update fan status",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusColor = (value: number, type: string) => {
     if (type === 'pulse') {
@@ -174,12 +194,18 @@ export default function Dashboard() {
                 <div className="p-3 rounded-xl bg-primary/10">
                   <Wind className="h-6 w-6 text-primary" />
                 </div>
-                <span className={`text-2xl font-bold ${healthData.fan ? 'text-success' : 'text-muted-foreground'}`}>
-                  {healthData.fan ? 'ON' : 'OFF'}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`text-2xl font-bold ${healthData.fan ? 'text-success' : 'text-muted-foreground'}`}>
+                    {healthData.fan ? 'ON' : 'OFF'}
+                  </span>
+                  <Switch 
+                    checked={healthData.fan} 
+                    onCheckedChange={handleFanToggle}
+                  />
+                </div>
               </div>
-              <h3 className="font-semibold text-muted-foreground">Fan Status</h3>
-              <p className="text-sm text-muted-foreground">Auto Control</p>
+              <h3 className="font-semibold text-muted-foreground">Fan Control</h3>
+              <p className="text-sm text-muted-foreground">Manual/Auto Control</p>
             </Card>
           </div>
 
