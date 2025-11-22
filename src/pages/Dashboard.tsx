@@ -28,11 +28,39 @@ interface PatientData {
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
-  const [healthData, setHealthData] = useState<HealthData | null>(null);
+  const [healthData, setHealthData] = useState<HealthData | null>({
+    buzzer: false,
+    fan: true,
+    hum: 65,
+    pulse: 78,
+    temp: 36.8,
+    timestamp: new Date().toISOString()
+  });
   const [patientData, setPatientData] = useState<PatientData | null>(null);
-  const [historicalData, setHistoricalData] = useState<any[]>([]);
+  const [historicalData, setHistoricalData] = useState<any[]>([
+    { time: '10:00', pulse: 72, temp: 36.5, humidity: 62 },
+    { time: '10:15', pulse: 75, temp: 36.6, humidity: 63 },
+    { time: '10:30', pulse: 78, temp: 36.7, humidity: 65 },
+    { time: '10:45', pulse: 76, temp: 36.8, humidity: 64 },
+    { time: '11:00', pulse: 80, temp: 37.0, humidity: 66 },
+    { time: '11:15', pulse: 78, temp: 36.8, humidity: 65 },
+  ]);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Simulate data variations for demo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHealthData(prev => prev ? {
+        ...prev,
+        pulse: 70 + Math.floor(Math.random() * 20),
+        temp: Number((36.5 + Math.random() * 1).toFixed(1)),
+        hum: 60 + Math.floor(Math.random() * 15),
+        timestamp: new Date().toISOString()
+      } : null);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
